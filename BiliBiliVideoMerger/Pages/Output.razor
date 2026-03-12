@@ -1,0 +1,169 @@
+﻿@using BiliBiliVideoMerger.Model
+@using FFMpegCore
+@{
+    bool existsFFmpeg = File.Exists(GlobalFFOptions.GetFFMpegBinaryPath());
+    string s = existsFFmpeg ? "mdi-check" : "mdi-alert";
+    string color = existsFFmpeg ? "green" : "orange";
+    const string check = "有效目录。已经找到ffmpeg";
+    const string alert = "输入ffmpeg程序所在文件夹";
+    bool existsOutpath = Directory.Exists(Outpath);
+    string outLabel = existsOutpath ? "输出文件夹" : "输出文件夹（不存在这个文件夹，将会创建）";
+}
+
+<MTextField @bind-Value="FFOptions.BinaryFolder" Dense Label=@(existsFFmpeg? check:alert) @bind-Value:after="StateHasChanged">
+    <PrependInnerContent>
+        <MIcon Icon="@s" Color="@color" OnClick="OpenWpfFolderDialog" Disabled="existsFFmpeg" />
+    </PrependInnerContent>
+</MTextField>
+<MTextField @bind-Value="Outpath" Dense Label=@outLabel>
+    <PrependInnerContent>
+        <MIcon Icon="@("mdi-list-box")" OnClick="OpenWpfFolderDialog2" />
+    </PrependInnerContent>
+</MTextField>
+<MButtonGroup>
+    <MCheckbox @bind-Value="UseNumberForMulti" Label="多p视频用序号代替副标题"></MCheckbox>
+    <MCheckbox @bind-Value="AlwaysAddNumber" Label="单p视频也加副标题或序号"></MCheckbox>
+    <MCheckbox @bind-Value="SkipExisting" Label="跳过已经存在的文件（无法预检测是否完整）"></MCheckbox>
+    <MCheckbox @bind-Value="MultiInSeparateFolder" Label="多p视频置于独立文件夹"></MCheckbox>
+    <MCheckbox @bind-Value="PreserveFileTime" Label="设置输出文件的创建时间和修改时间与配置相同"></MCheckbox>
+    <MButton Disabled="@(string.IsNullOrWhiteSpace(Outpath) || !existsFFmpeg || runing)" OnClick="Run" Loading="runing">输出</MButton>
+</MButtonGroup>
+<br />
+@code {
+    bool runing = false;
+    [Parameter]
+    public bool Running
+    {
+        get => runing;
+        set
+        {
+            if (runing != value)
+            {
+                runing = value;
+                RunningChanged.InvokeAsync(value);
+            }
+        }
+    }
+    [Parameter] public EventCallback<bool> RunningChanged { get; set; }
+    async Task Run()
+    {
+        Running = true;
+        foreach (var item in BiliModels)
+        {
+            item.ClearCompleted();
+        }
+        foreach (var item in BiliModels)
+        {
+            await foreach (var item2 in item.OutPut(Outpath, OutModel))
+            {
+                StateHasChanged();
+            }
+        }
+        Running = false;
+    }
+    [Parameter] public IEnumerable<BiliBiliModel> BiliModels { get => field ?? []; set; }
+    OutputMode OutModel { get; set; }
+
+    /// <summary>
+    /// 多p视频用序号代替副标题
+    /// </summary>
+    public bool UseNumberForMulti
+    {
+        get => OutModel.HasFlag(OutputMode.UseNumberForMulti);
+        set
+        {
+            if (value)
+                OutModel |= OutputMode.UseNumberForMulti;
+            else
+                OutModel &= ~OutputMode.UseNumberForMulti;
+        }
+    }
+
+    /// <summary>
+    /// 单p视频也加副标题或序号
+    /// </summary>
+    public bool AlwaysAddNumber
+    {
+        get => OutModel.HasFlag(OutputMode.AlwaysAddMulti);
+        set
+        {
+            if (value)
+                OutModel |= OutputMode.AlwaysAddMulti;
+            else
+                OutModel &= ~OutputMode.AlwaysAddMulti;
+        }
+    }
+
+    /// <summary>
+    /// 跳过已经存在的文件（无法预检测是否完整）
+    /// </summary>
+    public bool SkipExisting
+    {
+        get => OutModel.HasFlag(OutputMode.SkipExisting);
+        set
+        {
+            if (value)
+                OutModel |= OutputMode.SkipExisting;
+            else
+                OutModel &= ~OutputMode.SkipExisting;
+        }
+    }
+    /// <summary>
+    /// 多p视频置于独立文件夹
+    /// </summary>
+    public bool MultiInSeparateFolder
+    {
+        get => OutModel.HasFlag(OutputMode.MultiInSeparateFolder);
+        set
+        {
+            if (value)
+                OutModel |= OutputMode.MultiInSeparateFolder;
+            else
+                OutModel &= ~OutputMode.MultiInSeparateFolder;
+        }
+    }
+    /// <summary>
+    /// 设置输出文件的创建时间和修改时间与配置相同
+    /// </summary>
+    public bool PreserveFileTime
+    {
+        get => OutModel.HasFlag(OutputMode.PreserveFileTime);
+        set
+        {
+            if (value)
+                OutModel |= OutputMode.PreserveFileTime;
+            else
+                OutModel &= ~OutputMode.PreserveFileTime;
+        }
+    }
+    static FFOptions FFOptions { get; } = new FFOptions() { BinaryFolder = Directory.GetCurrentDirectory() };
+    string Outpath { get; set; } = Path.Combine(Directory.GetCurrentDirectory(), "Output");
+    static Output()
+    {
+        GlobalFFOptions.Configure(FFOptions);
+    }
+    private void OpenWpfFolderDialog()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "选择文件夹",
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            FFOptions.BinaryFolder = dialog.FolderName;
+        }
+    }
+    private void OpenWpfFolderDialog2()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "选择文件夹",
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            Outpath = dialog.FolderName;
+        }
+    }
+}

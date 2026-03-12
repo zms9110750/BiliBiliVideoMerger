@@ -1,0 +1,108 @@
+﻿@page "/"
+@using BiliBiliVideoMerger.Model
+@using FFMpegCore
+
+<PageTitle>Index</PageTitle>
+
+@foreach (var item in Tags.Index())
+{
+    bool b = Directory.Exists(item.Item);
+    string s = b ? "mdi-check" : "mdi-alert";
+    string color = b ? "green" : "orange";
+    const string check = "有效目录";
+    const string alert = "无效路径";
+    <MTextField @bind-Value="Tags[item.Index]" Dense Label="@(b? check:alert)" HideDetails="@("auto")">
+        <PrependContent>
+            <MButton IconName="mdi-minus" OnClick="() => Tags.RemoveAt(item.Index)" />
+        </PrependContent>
+        <PrependInnerContent>
+            <MIcon Icon="@s" Color="@color" />
+        </PrependInnerContent>
+        <AppendContent>
+        </AppendContent>
+    </MTextField>
+}
+<MTextField @bind-Value="p" Dense @onblur="@(AddNewStrings)" Label="输入或点+号选择b站下载文件夹" HideDetails="@("auto")">
+    <PrependContent>
+        <MButton IconName="mdi-plus" OnClick="OpenWpfFolderDialog" />
+    </PrependContent>
+</MTextField>
+<MButton OnClick="RefreshSearch" Disabled="!Tags.Any(Directory.Exists) || runing">开始查找或刷新</MButton>
+<br />
+<br />
+<Output @bind-Running="runing" BiliModels="selectedItems" />
+@if (searchResultsKey == 0)
+{
+    @((MarkupString)readme)
+}
+else
+{
+    <SearchResults SelectedItemsChanged="@(s => selectedItems = s)" ItemsTask="Find()" @key="searchResultsKey" />
+}
+@code {
+    bool runing = false;
+    private string readme = "";
+    private IEnumerable<BiliBiliModel> selectedItems = [];
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            readme = await File.ReadAllTextAsync(@"wwwroot\readme\IndexReadme.txt");
+        }
+        catch (Exception ex)
+        {
+            readme += $"\n❌ 读取readme失败: {ex.Message}";
+        }
+    }
+    private int searchResultsKey = 0;
+
+    private void RefreshSearch()
+    {
+        searchResultsKey++;  // 改变 Key 强制重建组件
+    }
+    string p = "";
+    void AddNewStrings()
+    {
+        if (!string.IsNullOrEmpty(p))
+        {
+            Tags.Add(p);
+            p = "";
+        }
+    }
+    public List<string> Tags { get; set; } = [];
+
+    private void OpenWpfFolderDialog()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "选择文件夹",
+            Multiselect = true
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            foreach (var item in dialog.FolderNames)
+            {
+                p = item;
+                AddNewStrings();
+            }
+        }
+    }
+    JsonSerializerOptions jsonOptions = new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+    };
+    async IAsyncEnumerable<BilibiliVideoMetadata> Find()
+    {
+        foreach (var item in Tags.Distinct().Where(Directory.Exists))
+        {
+            foreach (var jsonPath in Directory.EnumerateFiles(item, "entry.json", SearchOption.AllDirectories))
+            {
+                using Stream stream = File.OpenRead(jsonPath);
+                var json = await JsonSerializer.DeserializeAsync<BilibiliVideoMetadata>(stream, jsonOptions);
+                json?.FindVideoPath(Path.GetDirectoryName(jsonPath)!);
+                yield return json!;
+            }
+        }
+    }
+}

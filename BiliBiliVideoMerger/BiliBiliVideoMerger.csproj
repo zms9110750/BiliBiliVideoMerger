@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+    <PropertyGroup>
+      <OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+		<Nullable>enable</Nullable>
+      <ImplicitUsings>enable</ImplicitUsings>
+      <UseWPF>true</UseWPF>
+      <RootNamespace>BiliBiliVideoMerger</RootNamespace>
+    </PropertyGroup>
+
+     <ItemGroup>
+	 
+		 <PackageReference Include="FFMpegCore" Version="5.*" />
+
+		 <PackageReference Include="Humanizer.Core.zh-CN" Version="3.*" />
+       <PackageReference Include="Masa.Blazor" Version="1.*" />
+       <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Wpf" Version="*" />
+     </ItemGroup>
+
+     <ItemGroup>
+       <Content Update="wwwroot\**">
+         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+       </Content>
+     </ItemGroup>
+
+     <ItemGroup>
+       <Folder Include="新文件夹\" />
+     </ItemGroup>
+
+</Project>
