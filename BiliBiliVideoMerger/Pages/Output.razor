@@ -45,6 +45,8 @@
         }
     }
     [Parameter] public EventCallback<bool> RunningChanged { get; set; }
+    [Parameter] public EventCallback Refresh { get; set; }
+
     async Task Run()
     {
         Running = true;
@@ -57,6 +59,7 @@
             await foreach (var item2 in item.OutPut(Outpath, OutModel))
             {
                 StateHasChanged();
+                await Refresh.InvokeAsync();
             }
         }
         Running = false;

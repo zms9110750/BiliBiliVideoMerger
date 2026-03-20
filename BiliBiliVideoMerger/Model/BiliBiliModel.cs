@@ -1,5 +1,6 @@
 ﻿
 
+using Canalot.Utils;
 using FFMpegCore;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
@@ -96,7 +97,7 @@ public class BiliBiliModel(BilibiliVideoMetadata metadata)
     }
     public void ClearCompleted()
     {
-        _completed.Clear(); 
+        _completed.Clear();
     }
     public async IAsyncEnumerable<int> OutPut(string outPath, OutputMode mode)
     {
@@ -107,6 +108,7 @@ public class BiliBiliModel(BilibiliVideoMetadata metadata)
         ClearCompleted();
         // 确定最终输出目录
         string finalDir = outPath;
+        Directory.CreateDirectory(outPath);
         if (mode.HasFlag(OutputMode.MultiInSeparateFolder) && selectedList.Count > 1)
         {
             finalDir = Path.Combine(outPath, Title);
@@ -123,7 +125,7 @@ public class BiliBiliModel(BilibiliVideoMetadata metadata)
                 fileName += "_";
                 fileName += mode.HasFlag(OutputMode.UseNumberForMulti) ? item.PageData.Page.ToString("D2") : item.PageData.Part;
             }
-
+            fileName = fileName.ToSafeFileName();
             string outputFile = Path.Combine(finalDir, $"{fileName}.mp4");
 
             // 检查跳过已存在
@@ -141,9 +143,9 @@ public class BiliBiliModel(BilibiliVideoMetadata metadata)
                     .ProcessAsynchronously();
             _completed.Add(item);
             if (mode.HasFlag(OutputMode.PreserveFileTime))
-            { 
+            {
                 File.SetCreationTime(outputFile, item.TimeCreate);
-                File.SetLastWriteTime(outputFile, item.TimeUpdate); 
+                File.SetLastWriteTime(outputFile, item.TimeUpdate);
             }
             yield return Complete;
         }

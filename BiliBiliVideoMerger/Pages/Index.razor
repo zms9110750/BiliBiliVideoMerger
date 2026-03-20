@@ -30,19 +30,20 @@
 <MButton OnClick="RefreshSearch" Disabled="!Tags.Any(Directory.Exists) || runing">开始查找或刷新</MButton>
 <br />
 <br />
-<Output @bind-Running="runing" BiliModels="selectedItems" />
+<Output @bind-Running="runing" BiliModels="selectedItems" Refresh="@(() => Search?.Refresh())" />
 @if (searchResultsKey == 0)
 {
     @((MarkupString)readme)
 }
 else
 {
-    <SearchResults SelectedItemsChanged="@(s => selectedItems = s)" ItemsTask="Find()" @key="searchResultsKey" />
+    <SearchResults @ref="Search" SelectedItemsChanged="@(s => selectedItems = s)" ItemsTask="Find()" @key="searchResultsKey" />
 }
 @code {
     bool runing = false;
     private string readme = "";
     private IEnumerable<BiliBiliModel> selectedItems = [];
+    SearchResults? Search;
     protected override async Task OnInitializedAsync()
     {
         try

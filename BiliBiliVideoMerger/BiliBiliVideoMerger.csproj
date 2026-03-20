@@ -6,6 +6,7 @@
       <ImplicitUsings>enable</ImplicitUsings>
       <UseWPF>true</UseWPF>
       <RootNamespace>BiliBiliVideoMerger</RootNamespace>
+      <Version>0.0.2</Version>
     </PropertyGroup>
 
      <ItemGroup>
@@ -21,10 +22,6 @@
        <Content Update="wwwroot\**">
          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
        </Content>
-     </ItemGroup>
-
-     <ItemGroup>
-       <Folder Include="新文件夹\" />
      </ItemGroup>
 
 </Project>

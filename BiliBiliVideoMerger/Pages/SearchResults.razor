@@ -141,7 +141,8 @@
 
 @code {
     [Parameter]
-    public bool Running { get; set; }
+    public bool Running   {     get; set;   } 
+
     string? _search;
     bool loading = true;
     List<string> hello = [];
@@ -192,9 +193,13 @@
             }
         }
         loading = false;
-        await    SelectedItemsChanged.InvokeAsync(ItemsDic.Values); 
-        
+        await    SelectedItemsChanged.InvokeAsync(ItemsDic.Values);
+
     }
     [Parameter]
-    public EventCallback<IEnumerable<BiliBiliModel>> SelectedItemsChanged { get; set; } 
+    public EventCallback<IEnumerable<BiliBiliModel>> SelectedItemsChanged { get; set; }
+
+    public void Refresh()
+    {        StateHasChanged();
+    }
 }
