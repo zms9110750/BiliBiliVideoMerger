@@ -1,0 +1,18 @@
+@namespace BiliBiliVideoMerger
+
+<div>
+    <h1>@Title</h1>
+    <p>Welcome to your Photino desktop app!</p>
+    <p>Current count: @currentCount</p>
+    <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+</div>
+
+@code {
+    string Title = "BiliBiliVideoMerger";
+    private int currentCount = 0;
+
+    void IncrementCount()
+    {
+        currentCount++;
+    }
+}

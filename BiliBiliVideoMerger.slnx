@@ -1,3 +1,8 @@
 <Solution>
-  <Project Path="samples/BiliBiliVideoMerger/BiliBiliVideoMerger.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/BiliBiliVideoMerger/BiliBiliVideoMerger.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/BiliBiliVideoMerger.GUI/BiliBiliVideoMerger.GUI.csproj" />
+  </Folder>
 </Solution>
